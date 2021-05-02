@@ -1,0 +1,51 @@
+version: "3"
+services:
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    ports:
+    - 3000:3000
+    volumes:
+    - /Volumes/DATA1/IOT/grafana/grafana.ini:/etc/grafana/grafana.ini
+    - /Volumes/DATA1/IOT/grafana:/var/lib/grafana
+    networks:
+        my_network:
+            ipv4_address: 172.28.0.2
+    restart: always
+    environment:
+      GF_RENDERING_SERVER_URL: http://renderer:8081/render
+      GF_RENDERING_CALLBACK_URL: http://grafana:3000/
+      GF_LOG_FILTERS: rendering:debug
+  renderer:
+    container_name: renderer
+    image: grafana/grafana-image-renderer:latest
+    ports:
+      - 8081:8081
+    environment:
+      ENABLE_METRICS: 'true'
+    networks:
+      my_network:
+            ipv4_address: 172.28.0.3
+  influxdb:
+    image: influxdb:1.8.5
+    container_name: influxdb
+    ports:
+    - 8086:8086
+    volumes:
+    - /Volumes/DATA1/IOT/influxdb:/var/lib/influxdb
+    networks:
+        my_network:
+            ipv4_address: 172.28.0.4
+    restart: always
+  telegraf:
+    image: telegraf:latest
+    container_name: telegraf_sim
+    volumes:
+    - /Volumes/DATA1/IOT/telegraf/telegraf_sim.conf:/etc/telegraf/telegraf.conf:ro
+    restart: always
+networks:
+    my_network:
+        ipam:
+            driver: default
+            config:
+                - subnet: 172.28.0.0/16
